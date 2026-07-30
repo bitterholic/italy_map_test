@@ -1,0 +1,30 @@
+name: Nightly Weather Update
+
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate today's forecast page
+        run: python generate_today.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "weather-bot"
+          git config user.email "weather-bot@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet || git commit -m "Update forecast $(date +'%Y-%m-%d')"
+          git push
